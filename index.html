@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<!--
+  Elemental - client results report - DESIGN PROTOTYPE
+  Illustrative sample data. The client name and every value are fictional /
+  de-identified, shown only to demonstrate the report design and interactions.
+-->
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your Results · Elemental Health &amp; Nutrition</title>
+<meta name="theme-color" content="#2D3436">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Results">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' rx='40' fill='%232D3436'/%3E%3Cpath d='M90 44c-30 0-46 22-46 48 0 8 2 15 6 21 10-30 26-42 46-50-16 12-27 28-33 52 8 6 17 9 27 9 30 0 46-22 46-48S120 44 90 44z' fill='%2339B54A'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3Crect width='32' height='32' rx='7' fill='%232D3436'/%3E%3Cpath d='M16 8c-5.3 0-8 4-8 8.5 0 1.4.3 2.6 1 3.7 1.8-5.3 4.6-7.4 8.1-8.8-2.8 2.1-4.7 4.9-5.8 9.1 1.4 1 3 1.5 4.7 1.5 5.3 0 8-4 8-8.5S21.3 8 16 8z' fill='%2339B54A'/%3E%3C/svg%3E">
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900,400i,500i,700i&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Brand */
+  --dark: #2D3436;
+  --dark-deep: #252D2F;
+  --green: #39B54A;
+  --green-soft: #3DBF52;
+  --green-deep: #2E9A3D;
+  --cream: #FAF8F5;
+  --cream-warm: #F5F0EB;
+  --white: #FFFFFF;
+
+  /* Text */
+  --text: #2D3436;
+  --text-secondary: #5A5A5A;
+  --text-muted: #8A8A8A;
+  --text-on-dark: #F5F3F0;
+  --text-on-dark-muted: rgba(245,243,240,0.6);
+
+  /* Borders */
+  --border: #E8E4E0;
+  --border-light: #EDEBE8;
+
+  /* Status */
+  --amber: #C98A1E;
+  --amber-soft: #F4E9D2;
+  --red: #C24B2C;
+  --red-soft: #F6E2DA;
+  --lab-band: #E4E0DA;
+  --sage: #7FA47A;
+
+  /* range-bar zones — three distinct states */
+  --z-tgt: #B4E0B9;   /* elemental target */
+  --z-lab: #E7E1D7;   /* standard lab range */
+  --z-out: #E6C7BC;   /* outside both */
+
+  /* Type */
+  --font-heading: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-body: 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-heading-weight: 700;
+
+  /* Shape */
+  --pill-radius: 999px;
+  --card-radius: 16px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 220ms;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--cream-warm);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Numbers never shift the layout */
+.val, .rb-cap, .delta, .cmp-row, .meta-val, .num { font-variant-numeric: tabular-nums; }
+
+/* ── APP HEADER ── */
+.appbar {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--dark);
+  padding: calc(env(safe-area-inset-top) + 12px) 20px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 1px 0 rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.10);
+}
+.brandmark { display: flex; align-items: center; gap: 9px; }
+.brandmark svg { display: block; }
+.brandmark .wm { display: flex; flex-direction: column; line-height: 1; }
+.brandmark .wm b { font: 500 15px var(--font-body); color: var(--text-on-dark); letter-spacing: -0.01em; }
+.brandmark .wm span { font: 500 7.5px var(--font-body); color: var(--text-on-dark-muted); letter-spacing: 0.22em; margin-top: 3px; }
+.appbar .tab { font: 500 12px var(--font-body); color: var(--text-on-dark-muted); letter-spacing: .12em; text-transform: uppercase; }
+
+/* ── SHELL ── */
+.shell { max-width: 580px; margin: 0 auto; padding: 20px 16px 40px; }
+
+.reveal { opacity: 0; transform: translateY(10px); animation: rise .5s var(--ease) forwards; }
+.reveal:nth-of-type(1){animation-delay:.04s}
+.reveal:nth-of-type(2){animation-delay:.10s}
+.reveal:nth-of-type(3){animation-delay:.16s}
+.reveal:nth-of-type(4){animation-delay:.22s}
+.reveal:nth-of-type(5){animation-delay:.28s}
+.reveal:nth-of-type(6){animation-delay:.34s}
+.reveal:nth-of-type(7){animation-delay:.40s}
+.reveal:nth-of-type(8){animation-delay:.46s}
+@keyframes rise { to { opacity: 1; transform: none; } }
+
+/* ── META ── */
+.meta {
+  background: var(--white); border-radius: var(--card-radius);
+  padding: 18px 20px; margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 6px 22px rgba(45,52,54,.05);
+  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px;
+}
+.meta .who { font: 700 21px var(--font-heading); letter-spacing: -0.01em; }
+.meta .who span { display:block; font: 500 12px var(--font-body); color: var(--text-muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
+.meta .dates { text-align: right; font: 400 13px var(--font-body); color: var(--text-secondary); }
+.meta .dates b { color: var(--text); font-weight: 500; }
+
+/* ── SUMMARY / THE READ ── */
+.read {
+  background: var(--dark); color: var(--text-on-dark);
+  border-radius: var(--card-radius); padding: 24px 22px; margin-bottom: 14px;
+  box-shadow: 0 10px 30px rgba(45,52,54,.16);
+}
+.eyebrow { font: 500 12px var(--font-body); color: var(--green); letter-spacing: .14em; text-transform: uppercase; }
+.read h1 { font: 700 25px/1.28 var(--font-heading); margin: 12px 0 0; text-wrap: balance; letter-spacing: -0.01em; }
+.read h1 em { color: var(--green); font-style: italic; }
+.read p { font: 400 15.5px/1.62 var(--font-body); color: var(--text-on-dark); margin-top: 14px; text-wrap: pretty; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.chip { font: 500 12.5px var(--font-body); padding: 6px 12px; border-radius: var(--pill-radius); border: 1px solid rgba(245,243,240,.16); color: var(--text-on-dark); }
+.chip.g { border-color: rgba(57,181,74,.5); color: #BFE9C6; }
+.chip .num { font-weight: 700; }
+
+/* ── TOP 3 ── */
+.block-h { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 4px 12px; }
+.block-h h2 { font: 700 15px var(--font-heading); letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); }
+.block-h .hint { font: 400 12.5px var(--font-body); color: var(--text-muted); }
+
+.top { display: flex; flex-direction: column; gap: 10px; }
+.top-card {
+  background: var(--white); border-radius: var(--card-radius); padding: 16px 18px;
+  display: flex; gap: 14px; align-items: flex-start;
+  box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 5px 18px rgba(45,52,54,.05);
+}
+.top-num {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px;
+  background: var(--cream-warm); border: 1px solid var(--green);
+  display: grid; place-items: center; font: 700 15px var(--font-heading); color: var(--green-deep);
+}
+.top-card h3 { font: 700 16px var(--font-heading); letter-spacing: -0.01em; }
+.top-card p { font: 400 14px/1.5 var(--font-body); color: var(--text-secondary); margin-top: 3px; text-wrap: pretty; }
+.note-line {
+  margin-top: 10px; font: 400 13.5px/1.5 var(--font-body); color: var(--text-secondary);
+  background: var(--cream); border: 1px dashed var(--border); border-radius: 12px; padding: 12px 14px;
+}
+.note-line b { color: var(--text); font-weight: 700; }
+
+/* ── LEGEND ── */
+.legend {
+  background: var(--white); border-radius: 14px; padding: 14px 16px; margin: 14px 0 4px;
+  box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 4px 14px rgba(45,52,54,.04);
+  display: flex; flex-wrap: wrap; gap: 10px 18px;
+}
+.legend .li { display: flex; align-items: center; gap: 8px; font: 400 12.5px var(--font-body); color: var(--text-secondary); }
+.sw { width: 22px; height: 9px; border-radius: 999px; flex: 0 0 auto; }
+.sw.z-tgt { background: var(--z-tgt); box-shadow: inset 0 0 0 1.5px rgba(46,154,61,.5); }
+.sw.z-lab { background: var(--z-lab); }
+.sw.z-out { background: var(--z-out); }
+.sw.dot { width: 13px; height: 13px; background: var(--dark); border: 2.5px solid #fff; box-shadow: 0 0 0 1px var(--border), 0 0 7px rgba(45,52,54,.35); }
+.sw.prev { width: 11px; height: 11px; border-radius: 50%; background: #fff; border: 2px solid rgba(45,52,54,.42); }
+
+/* ── SYSTEM GROUP ── */
+.sys-h { display: flex; align-items: baseline; justify-content: space-between; margin: 28px 4px 12px; }
+.sys-h h2 { font: 700 20px var(--font-heading); letter-spacing: -0.01em; }
+.sys-h h2 em { color: var(--green); font-style: italic; }
+.sys-h .count { font: 500 12px var(--font-body); color: var(--text-muted); letter-spacing: .04em; }
+
+/* ── MARKER CARD ── */
+.mk {
+  background: var(--white); border-radius: var(--card-radius); margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 5px 18px rgba(45,52,54,.045);
+  overflow: hidden;
+}
+.mk-top { padding: 16px 18px 4px; }
+.mk-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.mk-name { font: 700 16px var(--font-heading); letter-spacing: -0.01em; }
+.mk-name small { display:block; font: 400 12px var(--font-body); color: var(--text-muted); margin-top: 2px; letter-spacing: 0; }
+.mk-figs { text-align: right; white-space: nowrap; }
+.mk-figs .val { font: 700 21px var(--font-heading); letter-spacing: -0.02em; }
+.mk-figs .unit { font: 400 12px var(--font-body); color: var(--text-muted); margin-left: 3px; }
+.delta { display: inline-flex; align-items: center; gap: 3px; font: 500 12px var(--font-body); margin-top: 4px; padding: 2px 8px; border-radius: 999px; }
+.delta.up-good, .delta.dn-good { color: var(--green-deep); background: rgba(57,181,74,.10); }
+.delta.watch { color: var(--amber); background: var(--amber-soft); }
+
+/* status pill */
+.pill { display: inline-block; font: 500 11px var(--font-body); letter-spacing: .04em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
+.pill.g { color: var(--green-deep); background: rgba(57,181,74,.12); }
+.pill.a { color: var(--amber); background: var(--amber-soft); }
+.pill.r { color: var(--red); background: var(--red-soft); }
+
+/* range bar — three distinct zones, dark glowing marker */
+.rb { padding: 12px 18px 18px; }
+.rb-scale {
+  --lab-l: 0%; --lab-r: 100%; --opt-l: 0%; --opt-r: 0%; --prev: var(--val);
+  position: relative; height: 14px; border-radius: 999px;
+  background: var(--z-out);                       /* base = outside both */
+  box-shadow: inset 0 1px 3px rgba(45,52,54,.12), inset 0 0 0 1px rgba(45,52,54,.04);
+}
+.rb-lab {                                          /* standard lab range */
+  position: absolute; top: 0; bottom: 0; left: var(--lab-l);
+  width: calc(var(--lab-r) - var(--lab-l)); background: var(--z-lab); border-radius: 999px; z-index: 1;
+}
+.rb-opt {                                          /* elemental target — raised + ringed to stand out */
+  position: absolute; top: -1px; bottom: -1px; left: var(--opt-l);
+  width: calc(var(--opt-r) - var(--opt-l)); background: var(--z-tgt); border-radius: 999px; z-index: 2;
+  box-shadow: inset 0 0 0 1.5px rgba(46,154,61,.55), 0 0 9px rgba(57,181,74,.30);
+}
+.rb-scale::before {                                /* movement trail: prior → current */
+  content: ""; position: absolute; top: 50%; height: 3px; transform: translateY(-50%);
+  left: min(var(--val), var(--prev));
+  width: max(calc(var(--val) - var(--prev)), calc(var(--prev) - var(--val)));
+  background: rgba(45,52,54,.32); border-radius: 999px; z-index: 3;
+}
+.rb-prev {                                         /* ghost prior marker */
+  position: absolute; top: 50%; left: var(--prev); width: 11px; height: 11px; border-radius: 50%;
+  transform: translate(-50%,-50%); background: var(--white); border: 2px solid rgba(45,52,54,.42); z-index: 4;
+}
+.rb-dot {                                          /* current result — dark, glowing */
+  position: absolute; top: 50%; left: var(--val); width: 18px; height: 18px; border-radius: 50%;
+  transform: translate(-50%,-50%); background: var(--dark); border: 3px solid var(--white); z-index: 5;
+  box-shadow: 0 0 0 4px rgba(45,52,54,.06), 0 2px 7px rgba(45,52,54,.45), 0 0 16px 3px rgba(45,52,54,.20);
+}
+.rb-dot::after {                                   /* soft pulse — makes it feel alive */
+  content: ""; position: absolute; inset: -6px; border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(45,52,54,.14); animation: dotpulse 2.8s var(--ease) infinite;
+}
+@keyframes dotpulse { 0%,100% { opacity: .55; transform: scale(.8); } 50% { opacity: 0; transform: scale(1.3); } }
+.rb-dot.g, .rb-dot.a, .rb-dot.r { background: var(--dark); }   /* zones carry status now, not the dot */
+.rb-cap { display: flex; justify-content: space-between; gap: 12px; margin-top: 13px; font: 400 12.5px var(--font-body); }
+.rb-cap .tgt { color: var(--green-deep); font-weight: 500; }
+.rb-cap .tgt b, .rb-cap .lab b { font-weight: 700; }
+.rb-cap .lab { color: var(--text-muted); }
+
+/* expandable why */
+.mk details { border-top: 1px solid var(--border-light); }
+.mk summary {
+  list-style: none; cursor: pointer; min-height: 44px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 18px; font: 500 13.5px var(--font-body); color: var(--green-deep);
+  transition: background var(--dur) var(--ease);
+}
+.mk summary::-webkit-details-marker { display: none; }
+.mk summary:active { background: var(--cream); }
+.mk summary .chev { transition: transform var(--dur) var(--ease); font-size: 12px; color: var(--text-muted); }
+.mk details[open] summary .chev { transform: rotate(90deg); }
+.mk .why { padding: 2px 18px 18px; font: 400 14px/1.62 var(--font-body); color: var(--text-secondary); text-wrap: pretty; }
+.mk .why b { color: var(--text); font-weight: 700; }
+
+/* compact rows */
+.compact { background: var(--white); border-radius: var(--card-radius); overflow: hidden; box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 5px 18px rgba(45,52,54,.045); }
+.cmp-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 10px; padding: 13px 18px; border-top: 1px solid var(--border-light); }
+.cmp-row:first-child { border-top: none; }
+.cmp-name { font: 500 14.5px var(--font-body); }
+.cmp-name small { color: var(--text-muted); font-weight: 400; }
+.cmp-val { font: 700 14.5px var(--font-heading); text-align: right; }
+.cmp-val .u { font: 400 11px var(--font-body); color: var(--text-muted); margin-left: 2px; }
+.cmp-dot { width: 10px; height: 10px; border-radius: 50%; justify-self: end; }
+.cmp-dot.g { background: var(--green); } .cmp-dot.a { background: var(--amber); } .cmp-dot.r { background: var(--red); }
+.cmp-foot { padding: 12px 18px; font: 400 12.5px/1.5 var(--font-body); color: var(--text-muted); border-top: 1px solid var(--border-light); background: var(--cream); text-wrap: pretty; }
+
+/* ── PLAN ── */
+.plan { background: var(--white); border-radius: var(--card-radius); padding: 20px; box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 6px 22px rgba(45,52,54,.05); }
+.plan h3 { font: 700 15px var(--font-heading); letter-spacing: .02em; margin: 20px 0 10px; text-transform: uppercase; color: var(--text-secondary); }
+.plan h3:first-child { margin-top: 0; }
+.checks { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.checks li { display: flex; gap: 11px; font: 400 14.5px/1.5 var(--font-body); color: var(--text); text-wrap: pretty; }
+.checks li b { font-weight: 700; }
+.checks svg { flex: 0 0 auto; width: 19px; height: 19px; margin-top: 2px; }
+.checks li.pending svg circle { stroke: var(--amber); }
+.checks li.pending { color: var(--text-secondary); }
+
+.life { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+.life li { font: 400 14px/1.5 var(--font-body); color: var(--text-secondary); padding-left: 15px; position: relative; text-wrap: pretty; }
+.life li::before { content: ""; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+.life li b { color: var(--text); font-weight: 700; }
+
+/* supplement table */
+.supp { width: 100%; border-collapse: collapse; margin-top: 4px; }
+.supp th { text-align: left; font: 500 11px var(--font-body); letter-spacing: .1em; text-transform: uppercase; color: var(--text-muted); padding: 0 0 8px; border-bottom: 1px solid var(--border); }
+.supp th.r, .supp td.r { text-align: right; }
+.supp td { font: 400 14px var(--font-body); color: var(--text); padding: 12px 8px 12px 0; border-bottom: 1px solid var(--border-light); vertical-align: top; }
+.supp td:first-child { font-weight: 700; }
+.supp td small { display: block; color: var(--text-muted); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.supp tr.new td:first-child::after { content: "NEW"; font: 700 9px var(--font-body); letter-spacing: .1em; color: var(--green-deep); background: rgba(57,181,74,.12); padding: 2px 6px; border-radius: 999px; margin-left: 8px; vertical-align: middle; }
+.supp tr.stop td { color: var(--text-muted); }
+.supp tr.stop td:first-child { text-decoration: line-through; font-weight: 400; }
+
+/* genetics */
+.gene summary { list-style: none; cursor: pointer; min-height: 44px; display: flex; align-items: center; justify-content: space-between; font: 700 15px var(--font-heading); }
+.gene summary::-webkit-details-marker { display: none; }
+.gene summary .chev { font-size: 13px; color: var(--text-muted); transition: transform var(--dur) var(--ease); }
+.gene[open] summary .chev { transform: rotate(90deg); }
+.gene .lede { font: 400 14px/1.6 var(--font-body); color: var(--text-secondary); margin: 8px 0 14px; text-wrap: pretty; }
+.snp { display: flex; flex-direction: column; gap: 8px; }
+.snp .r { background: var(--cream); border: 1px solid var(--border-light); border-radius: 12px; padding: 12px 14px; }
+.snp .r b { font: 700 13.5px var(--font-body); color: var(--green-deep); letter-spacing: .02em; }
+.snp .r p { font: 400 13px/1.5 var(--font-body); color: var(--text-secondary); margin-top: 3px; }
+
+/* footer */
+.foot { text-align: center; margin-top: 26px; padding: 24px 18px; }
+.foot .how { font: 700 18px var(--font-heading); letter-spacing: -0.01em; }
+.foot .how em { color: var(--green-deep); font-style: italic; }
+.foot p { font: 400 13.5px/1.6 var(--font-body); color: var(--text-muted); margin-top: 8px; max-width: 380px; margin-inline: auto; text-wrap: pretty; }
+.foot .btn { display: inline-flex; align-items: center; margin-top: 16px; font: 600 14px var(--font-body); color: #fff; background: var(--green); padding: 12px 24px; border-radius: 999px; text-decoration: none; transition: background var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.foot .btn:hover { background: var(--green-soft); }
+.foot .btn:active { transform: scale(0.96); }
+.foot .disc { margin-top: 18px; font-size: 11.5px; color: var(--text-muted); }
+
+/* print letterhead (screen-hidden) */
+.print-head { display: none; }
+
+/* ── MOVEMENT / TIME TOGGLE ── */
+.move { background: var(--white); border-radius: var(--card-radius); padding: 18px 20px; box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 6px 22px rgba(45,52,54,.05); }
+.timeline { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.tl-node { font: 500 12px var(--font-body); color: var(--text-muted); white-space: nowrap; }
+.tl-node.now { color: var(--text); font-weight: 700; }
+.tl-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--border); flex: 0 0 auto; }
+.tl-dot.now { background: var(--green); box-shadow: 0 0 0 4px rgba(57,181,74,.16); }
+.tl-line { flex: 1; height: 2px; background: linear-gradient(90deg, var(--border), var(--green)); border-radius: 2px; }
+.tctl { display: inline-flex; background: var(--cream-warm); border-radius: 999px; padding: 4px; gap: 2px; }
+.tctl input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.tctl label { font: 500 13px var(--font-body); color: var(--text-secondary); padding: 9px 15px; border-radius: 999px; cursor: pointer; transition: background var(--dur) var(--ease), color var(--dur) var(--ease), transform var(--dur) var(--ease); }
+.tctl input:checked + label { background: var(--dark); color: var(--text-on-dark); box-shadow: 0 2px 8px rgba(45,52,54,.22); }
+.tctl label:active { transform: scale(0.96); }
+.tctl-note { font: 400 12.5px/1.5 var(--font-body); color: var(--text-muted); margin-top: 12px; text-wrap: pretty; }
+body:has(#m-latest:checked) .delta,
+body:has(#m-latest:checked) .rb-prev,
+body:has(#m-latest:checked) .rb-scale::before { display: none; }
+
+/* ── PLAN CARDS ── */
+.pcard { background: var(--white); border-radius: var(--card-radius); overflow: hidden; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(45,52,54,.05), 0 6px 22px rgba(45,52,54,.05); }
+.pcard-h { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border-light); }
+.pcard-h h3 { font: 700 17px var(--font-heading); letter-spacing: -0.01em; }
+.ph-ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: 0 0 auto; }
+.ph-ic svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 1.9; }
+.ph-priority .ph-ic { background: var(--green); }
+.ph-life .ph-ic { background: var(--dark); }
+.ph-supp .ph-ic { background: var(--sage); }
+.pcard-b { padding: 18px 20px; }
+
+/* ── SUPPLEMENT ROWS ── */
+.supp-row { border-top: 1px solid var(--border-light); }
+.supp-row:first-of-type { border-top: none; }
+.supp-row summary { list-style: none; cursor: pointer; min-height: 52px; display: flex; align-items: center; gap: 12px; padding: 8px 0; transition: background var(--dur) var(--ease); }
+.supp-row summary::-webkit-details-marker { display: none; }
+.supp-row summary:active { background: var(--cream); }
+.s-name { font: 700 14.5px var(--font-body); flex: 1; }
+.s-new { font: 700 9px var(--font-body); letter-spacing: .1em; color: var(--green-deep); background: rgba(57,181,74,.12); padding: 2px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+.s-dose { font: 500 13px var(--font-body); color: var(--text-secondary); text-align: right; white-space: nowrap; }
+.supp-row .chev { color: var(--text-muted); font-size: 13px; transition: transform var(--dur) var(--ease); flex: 0 0 auto; }
+.supp-row[open] .chev { transform: rotate(90deg); }
+.s-why { font: 400 13.5px/1.55 var(--font-body); color: var(--text-secondary); padding: 0 0 14px; text-wrap: pretty; }
+.s-why b { color: var(--text); font-weight: 700; }
+.supp-row.replaced summary { cursor: default; opacity: .55; }
+.supp-row.replaced .s-name { text-decoration: line-through; font-weight: 400; }
+.supp-row.replaced .chev { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { animation: none; opacity: 1; transform: none; }
+  .rb-dot::after { animation: none; }
+  .mk summary .chev, .gene summary .chev, .supp-row .chev, .tctl label { transition: none; }
+}
+
+@media (max-width: 460px) {
+  .meta { flex-direction: column; }
+  .meta .dates { text-align: left; }
+}
+
+/* ── PRINT: the same data as a clean A4 document ── */
+@media print {
+  @page { margin: 16mm 14mm; }
+  html, body { background: #fff; font-size: 11pt; }
+  .appbar, .foot .btn { display: none !important; }
+  .reveal { opacity: 1; transform: none; animation: none; }
+  .shell { max-width: none; padding: 0; }
+  .print-head { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--dark); padding-bottom: 10px; margin-bottom: 18px; }
+  .print-head .pw b { font: 700 15pt var(--font-heading); }
+  .print-head .pw span { display: block; font: 500 7pt var(--font-body); letter-spacing: .2em; color: var(--text-muted); }
+  .print-head .pmeta { text-align: right; font: 400 9pt var(--font-body); color: var(--text-secondary); }
+  .read { background: #fff; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  .read h1, .read p { color: var(--text); }
+  .read h1 em, .read .eyebrow { color: var(--green-deep); }
+  .chip { border-color: var(--border); color: var(--text-secondary); }
+  .mk, .top-card, .compact, .plan, .pcard, .move, .meta, .legend { box-shadow: none; border: 1px solid var(--border); break-inside: avoid; }
+  .mk details, .gene, .supp-row { break-inside: avoid; }
+  .mk details:not([open]) .why, .gene:not([open]) .snp, .gene:not([open]) .lede, .supp-row .s-why { display: block; }
+  .mk summary .chev, .gene summary .chev, .supp-row .chev { display: none; }
+  .tctl { display: none !important; }
+  .sys-h, .block-h { break-after: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- APP HEADER (screen) -->
+<header class="appbar">
+  <div class="brandmark">
+    <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#39B54A" opacity=".14"/><path d="M16 7c-5.6 0-8.5 4.2-8.5 9 0 1.5.3 2.8 1 4 1.9-5.6 4.9-7.8 8.6-9.3-3 2.2-5 5.2-6.1 9.6 1.5 1 3.2 1.6 5 1.6 5.6 0 8.5-4.2 8.5-9S21.6 7 16 7z" fill="#39B54A"/></svg>
+    <span class="wm"><b>elemental</b><span>HEALTH &amp; NUTRITION</span></span>
+  </div>
+  <span class="tab">Results</span>
+</header>
+
+<main class="shell">
+
+  <!-- PRINT-ONLY LETTERHEAD -->
+  <div class="print-head">
+    <div class="pw"><b>elemental</b><span>HEALTH &amp; NUTRITION</span></div>
+    <div class="pmeta">Results &amp; Plan · Jordan Avery<br>Collected 2 Jul 2026 · Reviewed 21 Jul 2026</div>
+  </div>
+
+  <!-- META -->
+  <section class="meta reveal">
+    <div class="who"><span>Sample report</span>Jordan Avery</div>
+    <div class="dates">
+      Collected <b>2 Jul 2026</b><br>
+      Reviewed <b>21 Jul 2026</b>
+    </div>
+  </section>
+
+  <!-- THE READ -->
+  <section class="read reveal">
+    <span class="eyebrow">The read this round</span>
+    <h1>The metabolic work has <em>clearly paid off</em>.</h1>
+    <p>Your insulin has halved, cholesterol has come down, and both liver enzymes are back to normal, so that part of the plan continues unchanged. The focus now moves to three things: your methylation cycle, vitamin&nbsp;D absorption, and the adrenal picture, which we complete once your DUTCH results arrive.</p>
+    <div class="chips">
+      <span class="chip g"><span class="num">6</span>&nbsp;markers improved</span>
+      <span class="chip"><span class="num">3</span>&nbsp;focus areas</span>
+      <span class="chip">DUTCH pending</span>
+    </div>
+  </section>
+
+  <!-- TOP 3 -->
+  <div class="block-h reveal"><h2>Top 3 this round</h2><span class="hint">what actually matters</span></div>
+  <div class="top reveal">
+    <div class="top-card">
+      <div class="top-num">1</div>
+      <div><h3>Lock in the metabolic gains</h3><p>Insulin halved and LDL is falling. Berbersorb and Lipotropex stay exactly as they are — nothing new added.</p></div>
+    </div>
+    <div class="top-card">
+      <div class="top-num">2</div>
+      <div><h3>Change the vitamin&nbsp;D form</h3><p>It barely moved on the daily spray and magnesium is adequate, so absorption is the block. Switching to an activated oral capsule.</p></div>
+    </div>
+    <div class="top-card">
+      <div class="top-num">3</div>
+      <div><h3>Start activated folate</h3><p>Homocysteine has now confirmed the methylation cycle needs support, so folate and B12 begin in their pre-activated forms.</p></div>
+    </div>
+    <div class="note-line"><b>Paused, on purpose:</b> adrenal support waits until your DUTCH results are in — so we treat the real curve, not a single blood number. One item for your GP: a parathyroid (PTH) test or DEXA scan to read the bone picture behind your ALP.</div>
+  </div>
+
+  <!-- MOVEMENT -->
+  <div class="block-h reveal"><h2>Movement</h2><span class="hint">across your rounds</span></div>
+  <section class="move reveal">
+    <div class="timeline">
+      <span class="tl-dot"></span><span class="tl-node">Previous round</span>
+      <span class="tl-line"></span>
+      <span class="tl-dot now"></span><span class="tl-node now">This round · 2 Jul 2026</span>
+    </div>
+    <div class="tctl" role="group" aria-label="Compare against">
+      <input type="radio" name="mode" id="m-latest"><label for="m-latest">Latest only</label>
+      <input type="radio" name="mode" id="m-last" checked><label for="m-last">vs last round</label>
+      <input type="radio" name="mode" id="m-onset"><label for="m-onset">vs onset</label>
+    </div>
+    <p class="tctl-note">Every marker below carries its arrow and a hollow "last round" marker showing where it moved from — toggle <b>Latest only</b> for a clean current-state view. This client has two rounds so far, so <b>vs last round</b> and <b>vs onset</b> point to the same test; with a third round they separate and each marker plots its full path.</p>
+  </section>
+
+  <!-- LEGEND -->
+  <div class="legend reveal">
+    <div class="li"><span class="sw z-tgt"></span> Elemental target</div>
+    <div class="li"><span class="sw z-lab"></span> Standard lab range</div>
+    <div class="li"><span class="sw z-out"></span> Outside both</div>
+    <div class="li"><span class="sw dot"></span> Your result</div>
+    <div class="li"><span class="sw prev"></span> Last round</div>
+  </div>
+
+  <!-- ══ METABOLIC ══ -->
+  <div class="sys-h reveal"><h2>Metabolic &amp; <em>blood sugar</em></h2><span class="count">3 tracked · 2 to move</span></div>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Insulin <small>fasting</small></div>
+      <div class="mk-figs"><span class="val">5</span><span class="unit">mU/L</span><br><span class="delta dn-good">▼ from 9 · improving</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:0%;--lab-r:100%;--opt-l:25%;--opt-r:33.3%;--val:41.7%;--prev:75%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>3–4</b></span><span class="lab">Lab <b>&lt;25</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Insulin has <b>halved</b> — the standout result of the round, and proof the metabolic work is doing its job. It sits just above target now, so Berbersorb and Lipotropex stay exactly as they are rather than adding anything new.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Glucose <small>fasting</small></div>
+      <div class="mk-figs"><span class="val">5.5</span><span class="unit">mmol/L</span><br><span class="delta watch">▲ from 4.9 · watch</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:15%;--lab-r:60%;--opt-l:25%;--opt-r:50%;--val:62.5%;--prev:47.5%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>4–5</b></span><span class="lab">Lab <b>3.6–5.4</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Morning glucose crept up even though insulin came down — a <b>different signal to insulin resistance</b>. With insulin improved, your body isn't over-secreting to manage sugar. This is acceptable as things rebalance; a ten-minute walk after meals helps you use glucose without an insulin spike.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">LDL cholesterol</div>
+      <div class="mk-figs"><span class="val">2.9</span><span class="unit">mmol/L</span><br><span class="delta dn-good">▼ from 3.4 · improving</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:0%;--lab-r:50%;--opt-l:0%;--opt-r:50%;--val:58%;--prev:68%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&lt;2.5</b></span><span class="lab">Lab <b>&lt;2.5</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">LDL has dropped meaningfully and is heading the right way alongside your improved insulin, since these two tend to move together. It's still above target, so the current supplements continue while we let it keep trending down. Your Lp(a) below makes keeping this tight worthwhile.</div>
+    </details>
+  </article>
+
+  <div class="compact reveal">
+    <div class="cmp-row"><div class="cmp-name">HbA1c <small>3-month sugar</small></div><div class="cmp-val">5.2<span class="u">%</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">HDL cholesterol</div><div class="cmp-val">1.0<span class="u">mmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Triglycerides</div><div class="cmp-val">0.4<span class="u">mmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Apolipoprotein B <small>lab range</small></div><div class="cmp-val">0.88<span class="u">g/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-foot">HbA1c and triglycerides are strong. HDL sits at the floor of range — the resistance training in your plan is the lever that lifts it.</div>
+  </div>
+
+  <!-- ══ METHYLATION & NUTRIENTS ══ -->
+  <div class="sys-h reveal"><h2>Methylation &amp; <em>nutrients</em></h2><span class="count">3 tracked · the round's focus</span></div>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Homocysteine</div>
+      <div class="mk-figs"><span class="val">8.6</span><span class="unit">µmol/L</span><br><span class="pill a">above target</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:0%;--lab-r:91.7%;--opt-l:16.7%;--opt-r:29.2%;--val:38.3%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>6–7.5</b></span><span class="lab">Lab <b>&lt;15</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">A standard lab calls this normal — but it sits <b>above the target we work to</b>, and it reads directly on the methylation cycle. This is the result that confirms folate and B12 need active support now rather than waiting another round. Impaired methylation touches mood, cardiovascular risk and detoxification.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Folate <small>serum</small></div>
+      <div class="mk-figs"><span class="val">23.1</span><span class="unit">nmol/L</span><br><span class="pill a">below target</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:13.3%;--lab-r:100%;--opt-l:77.8%;--opt-r:88.9%;--val:51.3%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>35–40</b></span><span class="lab">Lab <b>&gt;6</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">"Above 6" clears the lab, but you're well below the target we aim for — and given your methylation genetics, your body needs the <b>pre-activated form</b> to use it properly. Folate is central to dopamine and serotonin; low levels track with anxiety and low mood, which is why this one starts now.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Vitamin D</div>
+      <div class="mk-figs"><span class="val">78</span><span class="unit">nmol/L</span><br><span class="delta watch">▲ from 76 · barely moved</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:7.7%;--lab-r:92.3%;--opt-l:61.5%;--opt-r:100%;--val:29.2%;--prev:27.7%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&gt;120</b></span><span class="lab">Lab <b>50–160</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Barely moved despite the daily spray, and your magnesium is adequate — so a mineral shortfall isn't the block, <b>absorption is</b>. That's why we're switching you from the spray to an activated oral capsule that carries K2 alongside it.</div>
+    </details>
+  </article>
+
+  <div class="compact reveal">
+    <div class="cmp-row"><div class="cmp-name">Active B12</div><div class="cmp-val">108<span class="u">pmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Zinc <small>plasma</small></div><div class="cmp-val">13.9<span class="u">µmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Magnesium</div><div class="cmp-val">0.88<span class="u">mmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-foot">Magnesium is adequate — which is what tells us vitamin&nbsp;D's problem is absorption, not a co-factor shortfall. The activated folate we're adding covers the B-vitamin side.</div>
+  </div>
+
+  <!-- ══ LIVER ══ -->
+  <div class="sys-h reveal"><h2>Liver <em>function</em></h2><span class="count">3 tracked · both enzymes back to normal</span></div>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">ALT</div>
+      <div class="mk-figs"><span class="val">16</span><span class="unit">U/L</span><br><span class="delta dn-good">▼ from 28 · now optimal</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:12.5%;--lab-r:75%;--opt-l:0%;--opt-r:47.5%;--val:40%;--prev:70%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot g"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&lt;19</b></span><span class="lab">Lab <b>5–30</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Back to normal from being mildly raised — less metabolic pressure on the liver, and it tracks the improvement in your insulin.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">AST</div>
+      <div class="mk-figs"><span class="val">21</span><span class="unit">U/L</span><br><span class="delta dn-good">▼ from 29 · now optimal</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:25%;--lab-r:87.5%;--opt-l:0%;--opt-r:55%;--val:52.5%;--prev:72.5%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot g"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&lt;22</b></span><span class="lab">Lab <b>10–35</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Normalised alongside ALT, telling the same story. Keeping alcohol low is what protects this gain.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Bilirubin</div>
+      <div class="mk-figs"><span class="val">10</span><span class="unit">µmol/L</span><br><span class="delta dn-good">▼ from 21 · now in target</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:12.5%;--lab-r:62.5%;--opt-l:33.3%;--opt-r:50%;--val:41.7%;--prev:87.5%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot g"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>8–12</b></span><span class="lab">Lab <b>3–15</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Down to target from mildly high. The earlier elevation is consistent with <b>Gilbert's</b> — a benign inherited pattern, nothing to treat.</div>
+    </details>
+  </article>
+
+  <div class="compact reveal">
+    <div class="cmp-row"><div class="cmp-name">GGT</div><div class="cmp-val">14<span class="u">U/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">LDH</div><div class="cmp-val">144<span class="u">U/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Albumin</div><div class="cmp-val">46<span class="u">g/L</span></div><span class="cmp-dot g"></span></div>
+  </div>
+
+  <!-- ══ BONE & MINERALS ══ -->
+  <div class="sys-h reveal"><h2>Bone &amp; <em>minerals</em></h2><span class="count">2 tracked · one pattern to watch</span></div>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">ALP <small>alkaline phosphatase</small></div>
+      <div class="mk-figs"><span class="val">100</span><span class="unit">U/L</span><br><span class="delta watch">▲ from 89 · watch</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:0%;--lab-r:85%;--opt-l:20%;--opt-r:40%;--val:70%;--prev:59%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>50–70</b></span><span class="lab">Lab <b>30–115</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Risen again. When calcium and vitamin&nbsp;D are low and ALP is high, it often points to <b>bone turnover reducing</b> — common moving into menopause. This is the pattern behind the GP referral for a PTH test or DEXA scan.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Corrected calcium</div>
+      <div class="mk-figs"><span class="val">2.22</span><span class="unit">mmol/L</span><br><span class="pill a">below target</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:14.3%;--lab-r:85.7%;--opt-l:42.9%;--opt-r:100%;--val:31.4%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&gt;2.3</b></span><span class="lab">Lab <b>2.10–2.60</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Below target. Alongside the flat vitamin&nbsp;D and rising ALP, this raises the possibility your body is <b>drawing calcium from bone</b> to keep blood levels steady — which is why we read these three together, not one at a time.</div>
+    </details>
+  </article>
+
+  <!-- ══ ADRENAL & HORMONES ══ -->
+  <div class="sys-h reveal"><h2>Adrenal &amp; <em>hormones</em></h2><span class="count">2 tracked · DUTCH completes the picture</span></div>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">DHEAS</div>
+      <div class="mk-figs"><span class="val">3.9</span><span class="unit">µmol/L</span><br><span class="delta up-good">▲ from 3.2 · improving</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:18.75%;--lab-r:96.25%;--opt-l:56.25%;--opt-r:100%;--val:48.75%;--prev:40%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&gt;4.5</b></span><span class="lab">Lab <b>1.5–7.7</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">This adrenal marker is climbing in the right direction, though not yet at target. The <b>DUTCH results will tell us far more</b> about the adrenal picture than this single number can — which is exactly why adrenal support is paused until they land.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Prolactin</div>
+      <div class="mk-figs"><span class="val">267</span><span class="unit">mIU/L</span><br><span class="pill a">above target</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:1.9%;--lab-r:97.9%;--opt-l:0%;--opt-r:10.6%;--val:35.5%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&lt;150</b></span><span class="lab">Lab <b>109–560</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Only mildly above the target we aim for, and a standard lab would call it completely normal. It rises with stress, so we read it against your <b>DUTCH adrenal</b> results rather than acting on it alone.</div>
+    </details>
+  </article>
+
+  <div class="compact reveal">
+    <div class="cmp-row"><div class="cmp-name">Cortisol <small>morning</small></div><div class="cmp-val">476<span class="u">nmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">FSH <small>menopause transition</small></div><div class="cmp-val">50.6<span class="u">U/L</span></div><span class="cmp-dot a"></span></div>
+    <div class="cmp-row"><div class="cmp-name">LH</div><div class="cmp-val">25.5<span class="u">U/L</span></div><span class="cmp-dot a"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Oestradiol</div><div class="cmp-val">92<span class="u">pmol/L</span></div><span class="cmp-dot a"></span></div>
+    <div class="cmp-row"><div class="cmp-name">TSH <small>thyroid</small></div><div class="cmp-val">0.53<span class="u">mU/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-foot">FSH, LH and oestradiol read as the menopause transition — the bone pattern above sits within that context. Thyroid output (free T3/T4) ran mildly low last round; we recheck the free hormones on the next full panel rather than TSH alone.</div>
+  </div>
+
+  <!-- ══ KIDNEY & FLUID ══ -->
+  <div class="sys-h reveal"><h2>Kidney &amp; <em>fluid balance</em></h2><span class="count">3 tracked · a breathing &amp; hydration pattern</span></div>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Bicarbonate</div>
+      <div class="mk-figs"><span class="val">23</span><span class="unit">mmol/L</span><br><span class="delta watch">▼ from 24 · watch</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:12.5%;--lab-r:87.5%;--opt-l:50%;--opt-r:56.25%;--val:31.25%;--prev:37.5%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>26–27</b></span><span class="lab">Lab <b>20–32</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Drifted a little lower. Your other salt markers are normal, which points away from adrenals and toward your kidneys <b>compensating for over-breathing</b> — a pattern that often goes with anxiety. Daily breathing retraining is the tool here, alongside the mouth taping you're already doing.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Urea : creatinine ratio</div>
+      <div class="mk-figs"><span class="val">144</span><br><span class="delta watch">▲ from 132 · watch</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:6.25%;--lab-r:31.25%;--opt-l:6.25%;--opt-r:31.25%;--val:92.5%;--prev:77.5%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-prev"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>75–95</b></span><span class="lab">not flagged by standard labs</span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Risen further — and it's a ratio a <b>standard lab doesn't even report</b>. Your sodium shows you aren't dehydrated, which removes the simplest explanation, leaving either protein fermentation in the gut or protein breakdown. For now we track it rather than treat it directly.</div>
+    </details>
+  </article>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Sodium</div>
+      <div class="mk-figs"><span class="val">137</span><span class="unit">mmol/L</span><br><span class="pill a">below target</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:14.3%;--lab-r:85.7%;--opt-l:50%;--opt-r:100%;--val:28.6%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-dot a"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&gt;140</b></span><span class="lab">Lab <b>135–145</b></span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">Mildly low — useful mainly for what it <b>rules out</b>: it tells us the raised urea ratio above isn't dehydration. Keep salt and fluid spread through the day, with a little mineral-rich salt at night.</div>
+    </details>
+  </article>
+
+  <div class="compact reveal">
+    <div class="cmp-row"><div class="cmp-name">eGFR <small>kidney filtration</small></div><div class="cmp-val">&gt;90<span class="u">mL/min</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Creatinine</div><div class="cmp-val">52<span class="u">µmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Potassium</div><div class="cmp-val">4.2<span class="u">mmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Urate</div><div class="cmp-val">0.24<span class="u">mmol/L</span></div><span class="cmp-dot g"></span></div>
+  </div>
+
+  <!-- ══ CARDIOVASCULAR / IRON / SCREENING (compact) ══ -->
+  <div class="sys-h reveal"><h2>Cardiovascular, iron &amp; <em>screening</em></h2><span class="count">measured &amp; noted</span></div>
+
+  <article class="mk reveal">
+    <div class="mk-top"><div class="mk-row">
+      <div class="mk-name">Lipoprotein(a) <small>genetic · measured once</small></div>
+      <div class="mk-figs"><span class="val">149</span><span class="unit">nmol/L</span><br><span class="pill r">elevated</span></div>
+    </div></div>
+    <div class="rb"><div class="rb-scale" style="--lab-l:0%;--lab-r:46.9%;--opt-l:0%;--opt-r:46.9%;--val:93.1%">
+      <div class="rb-lab"></div><div class="rb-opt"></div><div class="rb-dot r"></div>
+    </div><div class="rb-cap"><span class="tgt">Target <b>&lt;75</b></span><span class="lab">genetic — set for life</span></div></div>
+    <details><summary>Why this matters <span class="chev">›</span></summary>
+      <div class="why">A genetic cardiovascular marker — it doesn't move with lifestyle, so it's <b>measured once and used to set strategy</b>. Yours is elevated, which is why we keep LDL and ApoB tight and treat the cardiovascular side seriously rather than casually.</div>
+    </details>
+  </article>
+
+  <div class="compact reveal">
+    <div class="cmp-row"><div class="cmp-name">Ferritin <small>▼ from 151</small></div><div class="cmp-val">93<span class="u">µg/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Iron</div><div class="cmp-val">10.7<span class="u">µmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Transferrin saturation</div><div class="cmp-val">21<span class="u">%</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">CRP <small>inflammation</small></div><div class="cmp-val">0.56<span class="u">mg/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">ESR</div><div class="cmp-val">4<span class="u">mm/h</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">CA&nbsp;125 <small>screening</small></div><div class="cmp-val">9<span class="u">U/mL</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-row"><div class="cmp-name">Mercury</div><div class="cmp-val">&lt;5<span class="u">nmol/L</span></div><span class="cmp-dot g"></span></div>
+    <div class="cmp-foot">CRP confirms no active inflammation — which is why your high-normal ferritin is read as metabolic context, not an inflammatory flag. Full blood count (14 markers) all sit within range.</div>
+  </div>
+
+  <!-- ══ PLAN ══ -->
+  <div class="block-h reveal"><h2>Your plan</h2><span class="hint">from here to next review</span></div>
+  <section class="pcard reveal">
+    <header class="pcard-h ph-priority">
+      <span class="ph-ic"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h3>Priority actions</h3>
+    </header>
+    <div class="pcard-b">
+    <ul class="checks">
+      <li><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#39B54A" stroke-width="1.6"/><path d="M6 10.2l2.6 2.6L14.2 7" stroke="#39B54A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Continue Berbersorb + Lipotropex</b> unchanged — insulin, cholesterol and liver have all improved on them.</span></li>
+      <li><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#39B54A" stroke-width="1.6"/><path d="M6 10.2l2.6 2.6L14.2 7" stroke="#39B54A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Switch vitamin&nbsp;D to the activated capsule</b> (Opti Active D3&nbsp;K2) — the spray isn't absorbing.</span></li>
+      <li><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#39B54A" stroke-width="1.6"/><path d="M6 10.2l2.6 2.6L14.2 7" stroke="#39B54A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Start activated folate</b> (Folinic Acid) — homocysteine confirms the methylation cycle needs it.</span></li>
+      <li><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#39B54A" stroke-width="1.6"/><path d="M6 10.2l2.6 2.6L14.2 7" stroke="#39B54A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Continue breathing retraining</b> daily — this is what addresses the bicarbonate result.</span></li>
+      <li class="pending"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#C98A1E" stroke-width="1.6"/><path d="M10 6v4.5l3 2" stroke="#C98A1E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Adrenal support — waiting on DUTCH</b> before adding anything.</span></li>
+      <li class="pending"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#C98A1E" stroke-width="1.6"/><path d="M10 6v4.5l3 2" stroke="#C98A1E" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>Ask your GP</b> about a parathyroid (PTH) test or DEXA scan — reading the bone picture behind your ALP.</span></li>
+    </ul>
+    </div>
+  </section>
+
+  <section class="pcard reveal">
+    <header class="pcard-h ph-life">
+      <span class="ph-ic"><svg viewBox="0 0 24 24"><path d="M12 20.5C6.5 17.5 4 13.8 4 10.2 4 7.3 6.2 5.5 8.4 5.5c1.6 0 3 .9 3.6 2.3.6-1.4 2-2.3 3.6-2.3 2.2 0 4.4 1.8 4.4 4.7 0 3.6-2.5 7.3-8 10.3z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h3>Lifestyle</h3>
+    </header>
+    <div class="pcard-b">
+    <ul class="life">
+      <li><b>Breathing retraining</b> — under 10 breaths/min (aim ~7), 15 min, 5×/week. Conditions the nervous system, supports bicarbonate, eases anxiety.</li>
+      <li><b>Evening wind-down</b> — screens off from 8pm, consistent sleep and wake times to anchor cortisol rhythm (helps night waking and grinding).</li>
+      <li><b>Resistance training 2–3×/week + daily walking</b> — lifts insulin sensitivity more than cardio alone; a 10-min walk after meals uses glucose without an insulin spike.</li>
+      <li><b>Blood-sugar-balanced meals</b> — protein, vegetables and good fats; ease back on refined carbs and sugar.</li>
+      <li><b>Reduce alcohol</b> — protects the liver gains and keeps ferritin down.</li>
+      <li><b>Hydration &amp; minerals</b> — steady through the day; ½&nbsp;tsp sea salt in a little water after brushing at night. Continue mouth taping.</li>
+    </ul>
+    </div>
+  </section>
+
+  <section class="pcard reveal">
+    <header class="pcard-h ph-supp">
+      <span class="ph-ic"><svg viewBox="0 0 24 24"><path d="M9 3.5h6M10 3.5v4.2L6.3 15a3.2 3.2 0 002.9 4.6h5.6a3.2 3.2 0 002.9-4.6L14 7.7V3.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h3>Supplements</h3>
+      <span class="hint" style="margin-left:auto">tap for rationale</span>
+    </header>
+    <div class="pcard-b">
+      <details class="supp-row"><summary><span class="s-name">Folinic Acid<span class="s-new">NEW</span></span><span class="s-dose">2 · twice daily</span><span class="chev">›</span></summary><div class="s-why"><b>Serotonin, dopamine &amp; methylation support.</b> Your homocysteine and folate results confirm the cycle needs the pre-activated form — which your MTHFR genetics also point to.</div></details>
+      <details class="supp-row"><summary><span class="s-name">Opti Active D3&nbsp;K2<span class="s-new">NEW</span></span><span class="s-dose">2 · daily</span><span class="chev">›</span></summary><div class="s-why"><b>Activated vitamin&nbsp;D with K2.</b> Replaces the spray, which wasn't absorbing. The K2 helps direct calcium to bone — relevant to the calcium and ALP pattern this round.</div></details>
+      <details class="supp-row"><summary><span class="s-name">Berbersorb</span><span class="s-dose">1 · with 2 meals</span><span class="chev">›</span></summary><div class="s-why"><b>Insulin &amp; glucose management.</b> This is doing the heavy lifting on the metabolic side — your insulin halved on it, so it stays exactly as is.</div></details>
+      <details class="supp-row"><summary><span class="s-name">Lipotropex</span><span class="s-dose">1 scoop · daily</span><span class="chev">›</span></summary><div class="s-why"><b>Liver support.</b> Both liver enzymes came back to normal this round; it continues while that gain settles.</div></details>
+      <details class="supp-row"><summary><span class="s-name">Magnesium glycinate</span><span class="s-dose">300–400mg · daily</span><span class="chev">›</span></summary><div class="s-why"><b>Sleep quality.</b> The glycinate form is calming and well-tolerated — chosen for sleep, without the loosening effect of cheaper forms.</div></details>
+      <details class="supp-row"><summary><span class="s-name">Ultraclean EPA/DHA</span><span class="s-dose">2 · daily</span><span class="chev">›</span></summary><div class="s-why"><b>Omega-3 fatty acids.</b> Supports the cardiovascular picture alongside your LDL and Lp(a), and helps the inflammatory balance.</div></details>
+      <details class="supp-row"><summary><span class="s-name">Creatine</span><span class="s-dose">5g · daily</span><span class="chev">›</span></summary><div class="s-why"><b>Muscle, strength &amp; cognition.</b> Pairs with the resistance training that lifts insulin sensitivity, with a bonus for mental sharpness.</div></details>
+      <details class="supp-row replaced"><summary><span class="s-name">D3 + K2 spray</span><span class="s-dose">Replaced by capsule</span><span class="chev">›</span></summary><div class="s-why">Swapped for the activated Opti Active D3&nbsp;K2 capsule above — same nutrient, better absorption.</div></details>
+    </div>
+  </section>
+
+  <!-- ══ GENETICS ══ -->
+  <div class="block-h reveal"><h2>Your genetics</h2><span class="hint">why we chose these forms</span></div>
+  <section class="plan reveal">
+    <details class="gene">
+      <summary>Methylation &amp; nutrient SNPs <span class="chev">›</span></summary>
+      <p class="lede">These variants shape how you absorb and use B-vitamins and choline — they're the reason your plan uses <b>activated</b> forms rather than standard ones. Set for life, so we read them once and let them guide every round.</p>
+      <div class="snp">
+        <div class="r"><b>MTHFR C677T</b><p>Activates folate into its usable form. Reduced activity can lift homocysteine — favour active folate. Fits your result exactly.</p></div>
+        <div class="r"><b>MTHFR A1298C</b><p>Side-branch of folate metabolism; milder alone, compounds when paired with 677.</p></div>
+        <div class="r"><b>COMT</b><p>Breaks down adrenaline, dopamine and oestrogen. A slower version means stress chemicals linger — relevant to anxiety, and why we introduce B-vitamins gently.</p></div>
+        <div class="r"><b>MTR &amp; MTRR</b><p>Recycle B12 to keep methylation turning — they raise your need for adequate, usable B12.</p></div>
+        <div class="r"><b>PEMT</b><p>Makes phosphatidylcholine to export fat from the liver. A reduced version raises choline need and fatty-liver risk — relevant to your mild liver markers.</p></div>
+        <div class="r"><b>DHFR · MTHFD1 · FUT2 · CBS · TCN2 · AHCY · NBPF3</b><p>Together they steer folate/choline demand, B12 transport into cells, and sulphur balance — the full reason your forms and doses are chosen the way they are.</p></div>
+      </div>
+    </details>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="foot reveal">
+    <div class="how">How we work: <em>measure, refine, adjust.</em></div>
+    <p>Follow this plan and we'll review it together at your next appointment. Any questions before then, just reply to your email.</p>
+    <a class="btn" href="#">Ask a question</a>
+    <p class="disc">Illustrative sample report for design review - the client and results shown are fictional. Targets shown are Elemental clinical targets, read alongside standard laboratory ranges and your history — not a diagnosis. Confidential.</p>
+  </footer>
+
+</main>
+</body>
+</html>
