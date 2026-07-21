@@ -431,17 +431,9 @@ html, body { background: var(--cream-warm); }
 
 /* thinner rail + glowing current handle */
 .rb-scale { height: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05); }
-/* current-result dot: a strong glow that reads even with motion OFF (Low Power / Reduce Motion), breathing on top when allowed */
-.rb-dot { background: #F3F5F6; box-shadow: 0 0 0 4px rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.55), 0 0 22px 7px rgba(255,255,255,0.55); }
+.rb-dot { background: #F3F5F6; box-shadow: 0 0 0 4px rgba(255,255,255,0.05), 0 2px 8px rgba(0,0,0,0.55), 0 0 16px 3px rgba(255,255,255,0.10); }
 .rb-dot.g, .rb-dot.a, .rb-dot.r { background: #F3F5F6; }
-.rb-dot::after { animation: none; inset: -5px; box-shadow: 0 0 16px 7px rgba(255,255,255,0.22); }
-@media (prefers-reduced-motion: no-preference) {
-  .rb-dot { animation: dotBreathe 2.4s ease-in-out infinite; }
-}
-@keyframes dotBreathe {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(255,255,255,0.08), 0 2px 8px rgba(0,0,0,0.55), 0 0 16px 5px rgba(255,255,255,0.45); }
-  50%      { box-shadow: 0 0 0 5px rgba(255,255,255,0.14), 0 2px 8px rgba(0,0,0,0.55), 0 0 34px 12px rgba(255,255,255,0.90); }
-}
+.rb-dot::after { box-shadow: 0 0 0 2px rgba(255,255,255,0.16); }
 .rb-opt { box-shadow: inset 0 0 0 1.5px rgba(90,201,109,0.6), 0 0 10px rgba(60,190,88,0.35); }
 
 /* previous result = distinct hollow ring; connector = dashed toward the glow */
